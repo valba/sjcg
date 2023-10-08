@@ -1,5 +1,4 @@
-# sjcg
-A simple SGE job creator for Gaussian
+# sjcg - A simple SGE job creator for Gaussian
 
 This script creates a SGE (.job) file for a Gaussian (.gjf) input file for the [CCAR](https://ccar.uned.es/) cluster.
 
