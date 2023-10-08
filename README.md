@@ -12,7 +12,7 @@ Copy the [sjcg](https://github.com/valba/sjcg/blob/main/sjcg) main script into y
 Copy the [templates](https://github.com/valba/sjcg/tree/main/templates) directory into your '${HOME}/.local/' directory.
 
 ## Template Customization
-The Gaussian template
+
 Please, customize all parameters of the Gaussian template (queue, expiration time, etc.) to your needs before using it.
 
 **Warning**: The Gaussian template considers the SCRATCH directory be located at your '${HOME}/SCRATCH/' directory.
