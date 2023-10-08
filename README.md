@@ -7,7 +7,7 @@ The goal of this script is to keep the log coming out from the SGE subsystem apa
 
 ## Installation
 
-Copy the sjcg main script into your '${HOME}/.local/bin/' directory.
+Copy the [sjcg main script](https://github.com/valba/sjcg/blob/main/sjcg) into your '${HOME}/.local/bin/' directory.
 
 Copy the templates directory into your '${HOME}/.local/' directory.
 
