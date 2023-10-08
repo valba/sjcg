@@ -9,6 +9,12 @@ The goal of this script is to keep the log coming out from the SGE subsystem apa
 
 Copy the [sjcg](https://github.com/valba/sjcg/blob/main/sjcg) main script into your '${HOME}/.local/bin/' directory.
 
+Give execution permission to the script:
+
+```
+chmod u+x ${HOME}/.local/bin/sjcg
+```
+
 Copy the [templates](https://github.com/valba/sjcg/tree/main/templates) directory into your '${HOME}/.local/' directory.
 
 ## Template Customization
