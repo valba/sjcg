@@ -1,0 +1,140 @@
+#!/bin/bash
+
+###############################
+#  Configuracion del trabajo  #
+###############################
+## Utilizar la shell de bash (RECOMENDABLE)
+#$ -S /bin/bash
+
+## Importar las variables de entorno del sistema (como $PWD, $USERNAME, $PATH, etc.) 
+## (MUY RECOMENDABLE)
+#$ -V
+
+# Ejecutar el trabajo en el directorio actual (RECOMENDABLE)
+#$ -cwd
+
+## Ejecutar en una cola determinada (RECOMENDABLE)
+#$ -q epsilon@compute-2-0
+
+#$ -j y
+## Limite del tiempo de ejecuccion
+##$ -l h_rt=20000:00:00
+## Reserva de Shared RAM
+#$ -l h_vmem=10000M
+
+## Activar paralelización (OBLIGATORIO PARA TRABAJOS EN PARALELO)
+## PEV   = make, mpi, smp
+## NPROC = número de procesadores
+#$ -pe mpi 4
+
+## Nombre del trabajo (OPCIONAL)
+#$ -N !__SGE-JOBNAME__!
+
+## Log de salida (OPCIONAL)
+#$ -o !__SGE-JOBNAME__!.log
+
+## Log de error (OPCIONAL)
+#$ -e error_!__SGE-JOBNAME__!.log
+
+
+## Asignar espacio requerido para el trabajo indicado en GB y entre " " (>=100 -> partition1, <100 -> partition2)
+## Solo disponible en las colas ALPHA, BETA y DSETA ya que son las unicas con 2 discos de scratch
+## En las demas colas siempre ira a partition1 sea cual sea el valor de DiskSpace 
+DiskSpace="50"
+
+#########################
+#  Comandos a ejecutar  #
+#########################
+## NO MODIFICAR ESTA LINEA (permite asignar que disco de scratch usar)
+#source /usr/local/jobs/scratch.sh $DiskSpace
+
+## Nombre del archivo de entrada de gaussian (gjf)
+## Nombre del archivo de checkpoint de gaussian (chk)
+
+echo 
+echo "01.- LOADING VARIABLES ..."
+## SGE INPUT
+## JOBNAME (i.e. substance_method)
+JOBNAME=!__SGE-JOBNAME__!
+
+## SGE OUTPUT
+## LOG (i.e. substance_method.log)
+LOG="${JOBNAME}.log"
+## ELOG (i.e. error_substance_method.log)
+ELOG="error_${JOBNAME}.log"
+
+## GAUSSIAN INPUT
+GNAME=!__GAUSSIAN-JOBNAME__!
+## GAUSSIAN JOB FILE
+GJF="${GNAME}.gjf"
+## GAUSSIAN INITIAL CHECKPOINT FILE
+#CHK=test0276.chk
+
+## GAUSSIAN OUTPUT
+GLOG="${GNAME}.log"
+## GAUSSIAN FINAL CHECKPOINT FILE
+CHKF="${GNAME}.chk"
+## GAUSSIAN FINAL FORMATED CHECKPOINT FILE
+FCHKF="${GNAME}.fchk"
+## GAUSSIAN READ-WRITE FILE
+RWF="${GNAME}.rwf"
+## GAUSSIAN SCRATCH DIRECTORY
+SCRATCH_DIR="${HOME}/SCRATCH"
+echo "... VARIABLES LOADED."
+
+
+## Cargar los módulos necesarios (OPCIONAL)
+## module unload MODULO_NO_DESEADO 
+## module load MODULO_DESEADO
+echo 
+echo "02.- LOADING GAUSSIAN MODULE ..."
+module use /share/modules
+module load gaussian/g16_2021
+echo "... GAUSSIAN MODULE LOADED."
+
+
+## Volcar toda la información a un directorio temporal
+SCRATCH_WORKDIR="${SCRATCH_DIR}/${JOBNAME}_${JOB_ID}"
+echo 
+echo "03.- CREATING SCRATCH DIRECTORY: ${SCRATCH_WORKDIR}"
+echo "..."
+[ ! -f ${SCRATCH_WORKDIR} ] && mkdir ${SCRATCH_WORKDIR}
+cp -r ${SGE_O_WORKDIR}/${GJF} ${SCRATCH_WORKDIR}
+cd ${SCRATCH_WORKDIR}
+echo "... SCRATCH DIRECTORY CREATED."
+
+
+## Lanzar Gaussian
+echo 
+echo "04.- LAUNCHING GAUSSIAN: "
+echo "/share/bin/gaussian16 -y=${CHKF} -z=${RWF} -fchk=${FCHKF} < ${GJF} > ${GLOG}"
+echo "..."
+/share/bin/gaussian16 -y=${CHKF} -z=${RWF} -fchk=${FCHKF} < ${GJF} > ${GLOG}
+echo "... GAUSSIAN LAUNCHED."
+
+
+## Volcar toda la información al /home de usuario
+echo 
+echo "05.- SAVING GAUSSIAN OUTPUT FILES IN ${SGE_O_WORKDIR}/${JOBNAME}"
+echo "..."
+OUTDIR="${SGE_O_WORKDIR}/${JOBNAME}/${JOBNAME}_${JOB_ID}"
+[ ! -d ${SGE_O_WORKDIR}/${JOBNAME} ] && mkdir ${SGE_O_WORKDIR}/${JOBNAME}
+mv ${SCRATCH_WORKDIR} ${OUTDIR}
+echo "... GAUSSIAN OUTPUT FILES SAVED IN ${OUTDIR}"
+
+##/share/software-build/gaussian16/g16/formchk $CHK.chk $CHK.fchk
+
+echo 
+echo "06.- SAVING SGE OUTPUT FILES IN ${OUTDIR}"
+echo "..."
+[ -f ${SGE_O_WORKDIR}/${LOG} ] && mv ${SGE_O_WORKDIR}/${LOG} ${OUTDIR}/
+[ -f ${SGE_O_WORKDIR}/${ELOG} ] && mv ${SGE_O_WORKDIR}/${ELOG} ${OUTDIR}/
+echo "... SGE OUTPUT FILES SAVED IN ${OUTDIR}"
+
+echo 
+echo "06.- SAVING SGE INPUT FILES IN ${OUTDIR}"
+echo "..."
+cp ${SGE_O_WORKDIR}/${JOBNAME}.job ${OUTDIR}
+echo "... SGE INPUT FILES SAVED IN ${OUTDIR}"
+echo 
+echo "SGE JOB SUCCESSFULLY FINISHED!"
