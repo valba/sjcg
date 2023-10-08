@@ -1,0 +1,54 @@
+#!/bin/bash
+#
+# Script: sjcg
+# Author: Valentin Alba Aparicio
+# Date: October 15, 2023
+# Description: This script creates a SGE job file for a Gaussian16 job file.
+#
+# Usage: sjcg [OPTIONS] <GAUSSIAN_JOBNAME> <SGE_JOBNAME>
+#
+# Options:
+#   -h, --help    Display help message
+#
+# Arguments:
+#   GAUSSIAN_JOBNAME    Name of the Gaussian job file (.gjf) to use
+#   SGE_JOBNAME    	Name of the SGE job file (.job) to generate
+#
+# Example usage: sjcg H2CO_B3P86_6-31G-df-p.gjf H2CO_B3P86.job
+
+# Function to display usage instructions
+usage() {
+    echo "Usage: $0 [OPTIONS] <GAUSSIAN_JOBNAME> <SGE_JOBNAME>"
+    echo "OPTIONS:"
+    echo "  -h, --help    Display this help message"
+    echo
+    echo "Arguments:"
+    echo "  GAUSSIAN_JOBNAME   Name of the Gaussian job file (.gjf) to use"
+    echo "  SGE_JOBNAME        Name of the SGE job file (.job) to generate"
+    echo
+    echo "Example usage: sjcg H2CO_B3P86_6-31G-df-p.gjf H2CO_B3P86.job"
+    exit 1
+}
+
+# Check for the --help or -h option
+if [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
+    usage
+fi
+
+# Check if the required number of arguments are provided
+if [ "$#" -ne 2 ]; then
+    usage
+fi
+
+# Input values from command line arguments
+GAUSSIAN_JOBNAME="${1%.gjf}"
+SGE_JOBNAME="${2%.job}"
+
+# Read the template file into a variable
+TEMPLATE_FILE="${HOME}/.local/templates/gaussian_job.tmpl"
+
+# Use sed to replace placeholders with actual values and save to a new file
+OUTPUT_FILE="${SGE_JOBNAME}.job"
+sed -e "s/!__SGE-JOBNAME__!/${SGE_JOBNAME}/g" -e "s/!__GAUSSIAN-JOBNAME__!/${GAUSSIAN_JOBNAME}/g" "${TEMPLATE_FILE}" > "${OUTPUT_FILE}"
+
+
