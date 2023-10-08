@@ -38,6 +38,6 @@ qsub SGE.job
 ```
 
 ## License
-[![Binder](https://www.gnu.org/graphics/gplv3-or-later.png)](https://www.gnu.org/licenses/gpl-3.0.en.html)
+[![GPLv3_Logo](https://www.gnu.org/graphics/gplv3-or-later.png)](https://www.gnu.org/licenses/gpl-3.0.en.html)
 
 GPLv3 or Later License.
