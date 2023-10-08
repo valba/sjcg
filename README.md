@@ -25,12 +25,13 @@ Once the Gaussian template has been modified to your needs, create a SGE job usi
 sjcg GAUSSIAN.gjf SGE.job
 ```
 
-Once the SGE.job is created, review its content before submitting it to the queue.
+Once the SGE.job is created, review its content before submitting it to the queue:
 
 ```
 qsub SGE.job
 ```
 
 ## License
+[![Binder](https://www.gnu.org/graphics/gplv3-or-later.png)](https://www.gnu.org/licenses/gpl-3.0.en.html)
 
-GPL3.
+GPLv3 or Later License.
