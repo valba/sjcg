@@ -18,7 +18,7 @@ Copy the [templates](https://github.com/valba/sjcg/tree/main/templates) director
 
 ## Template Customization
 
-Please, customize all parameters of the Gaussian template (queue, expiration time, etc.) according to your needs before using it.
+Please, customize all parameters of the Gaussian template (queue name, expiration time, etc.) according to your needs before using it.
 
 **Warning**: The Gaussian template considers the SCRATCH directory be located at your '${HOME}/SCRATCH/' directory.
 
