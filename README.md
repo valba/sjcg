@@ -2,7 +2,7 @@
 
 This script creates a SGE (.job) file for a Gaussian (.gjf) input file for the [CCAR](https://ccar.uned.es/) cluster.
 
-The goal of this script is to keep the log coming out from the SGE subsystem apart from the Gaussian log and to keep temporary files like checkpoint and read-write available for saving.
+The goal of this script is to keep the log coming out from the SGE subsystem apart from the Gaussian log and to keep Gaussian temporary files like checkpoint and read-write files available for saving after a finisished job.
 
 ## Installation
 
