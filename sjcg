@@ -36,18 +36,23 @@ if [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
 fi
 
 # Check if the required number of arguments are provided
-if [ "$#" -ne 2 ]; then
+if [ "$#" -lt 2 ]; then
     usage
 fi
 
 # Input values from command line arguments
 GAUSSIAN_JOB_NAME="${1%.gjf}"
 SGE_JOB_NAME="${2%.job}"
+if [ "$#" -gt 2 ] && [[ "$3" =~ ^[1-9][0-9]?$|^63$ ]]; then
+    SGE_NUM_PROCESSORS="${3}"
+else
+    SGE_NUM_PROCESSORS=1
+fi
 
 # Read the template file into a variable
 TEMPLATE_FILE="${HOME}/.local/templates/gaussian_job.tmpl"
 
 # Use sed to replace placeholders with actual values and save to a new file
 OUTPUT_FILE="${SGE_JOB_NAME}.job"
-sed -e "s/!__SGE-JOB_NAME__!/${SGE_JOB_NAME}/g" -e "s/!__GAUSSIAN-JOB_NAME__!/${GAUSSIAN_JOB_NAME}/g" "${TEMPLATE_FILE}" > "${OUTPUT_FILE}"
+sed -e "s/!__SGE-JOB_NAME__!/${SGE_JOB_NAME}/g" -e "s/!__GAUSSIAN-JOB_NAME__!/${GAUSSIAN_JOB_NAME}/g" -e "s/!__SGE-NUM-PROCESSORS__!/${SGE_NUM_PROCESSORS}/g" "${TEMPLATE_FILE}" > "${OUTPUT_FILE}"
 
