@@ -16,7 +16,6 @@
 ## Ejecutar en una cola determinada (RECOMENDABLE)
 #$ -q epsilon@compute-2-0
 
-#$ -j y
 ## Limite del tiempo de ejecuccion
 ##$ -l h_rt=20000:00:00
 ## Reserva de Shared RAM
@@ -25,7 +24,7 @@
 ## Activar paralelización (OBLIGATORIO PARA TRABAJOS EN PARALELO)
 ## PEV   = make, mpi, smp
 ## NPROC = número de procesadores
-#$ -pe mpi 2
+#$ -pe mpi 1
 
 ## Nombre del trabajo (OPCIONAL)
 #$ -N !__SGE-JOB_NAME__!
@@ -36,6 +35,8 @@
 ## Log de error (OPCIONAL)
 #$ -e error_!__SGE-JOB_NAME__!.log
 
+## Fusionar salida y error en el mismo archivo (OPCIONAL)                                      
+#$ -j n
 
 ## Asignar espacio requerido para el trabajo indicado en GB y entre " " (>=100 -> partition1, <100 -> partition2)
 ## Solo disponible en las colas ALPHA, BETA y DSETA ya que son las unicas con 2 discos de scratch
@@ -48,8 +49,6 @@ DiskSpace="50"
 ## NO MODIFICAR ESTA LINEA (permite asignar que disco de scratch usar)
 source /usr/local/jobs/scratch.sh $DiskSpace
 
-## Nombre del archivo de entrada de gaussian (gjf)
-## Nombre del archivo de checkpoint de gaussian (chk)
 
 echo 
 echo "01.- LOADING VARIABLES ..."
@@ -90,9 +89,10 @@ SGE_HISTORY_JSON="${HOME}/.sge_history.json"
 STARTING_TIME="$(date +"%Y-%m-%d %H:%M:%S")"
 JOB_TYPE="GAUSSIAN"
 
-## Cargar los módulos necesarios (OPCIONAL)
 ## module unload MODULO_NO_DESEADO 
 ## module load MODULO_DESEADO
+
+
 echo 
 echo "02.- LOADING GAUSSIAN MODULE ..."
 module use /share/modules
@@ -100,27 +100,24 @@ module load gaussian/g16_2021
 echo "... GAUSSIAN MODULE LOADED."
 
 
-## Volcar toda la información a un directorio temporal
-SCRATCH_WORKDIR="${SCRATCH_DIR}/${JOB_NAME}_${JOB_ID}"
 echo 
 echo "03.- CREATING SCRATCH DIRECTORY: ${SCRATCH_WORKDIR}"
 echo "..."
+SCRATCH_WORKDIR="${SCRATCH_DIR}/${JOB_NAME}_${JOB_ID}"
 [ ! -d ${SCRATCH_WORKDIR} ] && mkdir -p ${SCRATCH_WORKDIR}
 cp -r ${SGE_O_WORKDIR}/${GJF} ${SCRATCH_WORKDIR}
 cd ${SCRATCH_WORKDIR}
 echo "... SCRATCH DIRECTORY CREATED."
 
 
-## Lanzar Gaussian
 echo 
 echo "04.- LAUNCHING GAUSSIAN: "
-echo "/share/bin/gaussian16 -y=${CHKF} -z=${RWF} -fchk=${FCHKF} < ${GJF} > ${GLOG}"
+echo "/share/bin/gaussian16 -y=${CHKF} -z=${RWF} -fchk=${FCHKF} < ${GJF} | tee ${GLOG} ${SGE_O_WORKDIR}/${GLOG}"
 echo "..."
-/share/bin/gaussian16 -y=${CHKF} -z=${RWF} -fchk=${FCHKF} < ${GJF} > ${GLOG}
+/share/bin/gaussian16 -y=${CHKF} -z=${RWF} -fchk=${FCHKF} < ${GJF} | tee ${GLOG} ${SGE_O_WORKDIR}/${GLOG}
 echo "... GAUSSIAN LAUNCHED."
 
 
-## Volcar toda la información al /home de usuario
 echo 
 echo "05.- SAVING GAUSSIAN OUTPUT FILES IN ${SGE_O_WORKDIR}/${JOB_NAME}"
 echo "..."
@@ -138,11 +135,24 @@ echo "..."
 echo "... SGE OUTPUT FILES SAVED IN ${OUTPUT_DIR}"
 
 echo 
-echo "06.- SAVING SGE INPUT FILES IN ${OUTPUT_DIR}"
+echo "07.- SAVING SGE INPUT FILES IN ${OUTPUT_DIR}"
 echo "..."
 cp ${SGE_O_WORKDIR}/${JOB_NAME}.job ${OUTPUT_DIR}
 echo "... SGE INPUT FILES SAVED IN ${OUTPUT_DIR}"
 echo 
+
+echo 
+echo "08.- ANALYZING GAUSSIAN LOG ..."
+GSTATUS="Not available"
+if grep -q 'Normal termination' ${OUTPUT_DIR}/${GLOG}; then
+    echo "Gaussian Normal termination"
+    GSTATUS="Normal Termination"
+else
+    [-f ${OUTPUT_DIR}/${GLOG}] && mv ${OUTPUT_DIR}/${GLOG} ${OUTPUT_DIR}/"error_${GLOG}" && echo "Gaussian Error" && GSTATUS="Error found"
+    echo "No Gaussian log file found"
+fi
+echo "... GAUSSIAN LOG ANALYZED."
+
 echo "SGE JOB SUCCESSFULLY FINISHED!"
 
 ENDING_TIME="$(date +"%Y-%m-%d %H:%M:%S")"
@@ -157,6 +167,7 @@ JOB_RECORD="{
 \"OutputDir\": \"${OUTPUT_DIR}\",
 \"GaussianJobFile\": \"${GJF}\",
 \"GaussianLogFile\": \"${GLOG}\",
+\"GaussianStatus\": \"${GSTATUS}\",
 \"SGELogFile\": \"${LOG}\",
 \"EndingTimestamp\": \"${ENDING_TIME}\",
 \"Node\": \"${HOSTNAME}\",
