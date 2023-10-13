@@ -5,26 +5,26 @@
 # Date: October 15, 2023
 # Description: This script creates a SGE job file for a Gaussian16 job file.
 #
-# Usage: sjcg [OPTIONS] <GAUSSIAN_JOBNAME> <SGE_JOBNAME>
+# Usage: sjcg [OPTIONS] <GAUSSIAN_JOB_NAME> <SGE_JOB_NAME>
 #
 # Options:
 #   -h, --help    Display help message
 #
 # Arguments:
-#   GAUSSIAN_JOBNAME    Name of the Gaussian job file (.gjf) to use
-#   SGE_JOBNAME    	Name of the SGE job file (.job) to generate
+#   GAUSSIAN_JOB_NAME    Name of the Gaussian job file (.gjf) to use
+#   SGE_JOB_NAME    	Name of the SGE job file (.job) to generate
 #
 # Example usage: sjcg H2CO_B3P86_6-31G-df-p.gjf H2CO_B3P86.job
 
 # Function to display usage instructions
 usage() {
-    echo "Usage: $0 [OPTIONS] <GAUSSIAN_JOBNAME> <SGE_JOBNAME>"
+    echo "Usage: $0 [OPTIONS] <GAUSSIAN_JOB_NAME> <SGE_JOB_NAME>"
     echo "OPTIONS:"
     echo "  -h, --help    Display this help message"
     echo
     echo "Arguments:"
-    echo "  GAUSSIAN_JOBNAME   Name of the Gaussian job file (.gjf) to use"
-    echo "  SGE_JOBNAME        Name of the SGE job file (.job) to generate"
+    echo "  GAUSSIAN_JOB_NAME   Name of the Gaussian job file (.gjf) to use"
+    echo "  SGE_JOB_NAME        Name of the SGE job file (.job) to generate"
     echo
     echo "Example usage: sjcg H2CO_B3P86_6-31G-df-p.gjf H2CO_B3P86.job"
     exit 1
@@ -41,14 +41,13 @@ if [ "$#" -ne 2 ]; then
 fi
 
 # Input values from command line arguments
-GAUSSIAN_JOBNAME="${1%.gjf}"
-SGE_JOBNAME="${2%.job}"
+GAUSSIAN_JOB_NAME="${1%.gjf}"
+SGE_JOB_NAME="${2%.job}"
 
 # Read the template file into a variable
 TEMPLATE_FILE="${HOME}/.local/templates/gaussian_job.tmpl"
 
 # Use sed to replace placeholders with actual values and save to a new file
-OUTPUT_FILE="${SGE_JOBNAME}.job"
-sed -e "s/!__SGE-JOBNAME__!/${SGE_JOBNAME}/g" -e "s/!__GAUSSIAN-JOBNAME__!/${GAUSSIAN_JOBNAME}/g" "${TEMPLATE_FILE}" > "${OUTPUT_FILE}"
-
+OUTPUT_FILE="${SGE_JOB_NAME}.job"
+sed -e "s/!__SGE-JOB_NAME__!/${SGE_JOB_NAME}/g" -e "s/!__GAUSSIAN-JOB_NAME__!/${GAUSSIAN_JOB_NAME}/g" "${TEMPLATE_FILE}" > "${OUTPUT_FILE}"
 
