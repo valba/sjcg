@@ -20,8 +20,6 @@ Copy the [templates](https://github.com/valba/sjcg/tree/main/templates) director
 
 Please, customize all parameters of the Gaussian template (queue name, expiration time, etc.) according to your needs before using it.
 
-**Warning**: The Gaussian template considers the SCRATCH directory be located at your '${HOME}/SCRATCH/' directory.
-
 ## Usage
 
 Once the Gaussian template has been modified to your needs, create a SGE job using the following command:
