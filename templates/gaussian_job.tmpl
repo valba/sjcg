@@ -28,13 +28,13 @@
 #$ -pe mpi 4
 
 ## Nombre del trabajo (OPCIONAL)
-#$ -N !__SGE-JOBNAME__!
+#$ -N !__SGE-JOB_NAME__!
 
 ## Log de salida (OPCIONAL)
-#$ -o !__SGE-JOBNAME__!.log
+#$ -o !__SGE-JOB_NAME__!.log
 
 ## Log de error (OPCIONAL)
-#$ -e error_!__SGE-JOBNAME__!.log
+#$ -e error_!__SGE-JOB_NAME__!.log
 
 
 ## Asignar espacio requerido para el trabajo indicado en GB y entre " " (>=100 -> partition1, <100 -> partition2)
@@ -46,7 +46,7 @@ DiskSpace="50"
 #  Comandos a ejecutar  #
 #########################
 ## NO MODIFICAR ESTA LINEA (permite asignar que disco de scratch usar)
-#source /usr/local/jobs/scratch.sh $DiskSpace
+source /usr/local/jobs/scratch.sh $DiskSpace
 
 ## Nombre del archivo de entrada de gaussian (gjf)
 ## Nombre del archivo de checkpoint de gaussian (chk)
@@ -54,23 +54,25 @@ DiskSpace="50"
 echo 
 echo "01.- LOADING VARIABLES ..."
 ## SGE INPUT
-## JOBNAME (i.e. substance_method)
-JOBNAME=!__SGE-JOBNAME__!
+## JOB_NAME (i.e. substance_method)
+JOB_NAME=!__SGE-JOB_NAME__!
 
-## SGE OUTPUT
+## SGE OUTPUT_DIR
 ## LOG (i.e. substance_method.log)
-LOG="${JOBNAME}.log"
+LOG="${JOB_NAME}.log"
 ## ELOG (i.e. error_substance_method.log)
-ELOG="error_${JOBNAME}.log"
+ELOG="error_${JOB_NAME}.log"
+## OUTPUT_DIR
+OUTPUT_DIR="${SGE_O_WORKDIR}/${JOB_NAME}/${JOB_NAME}_${JOB_ID}"
 
 ## GAUSSIAN INPUT
-GNAME=!__GAUSSIAN-JOBNAME__!
+GNAME=!__GAUSSIAN-JOB_NAME__!
 ## GAUSSIAN JOB FILE
 GJF="${GNAME}.gjf"
 ## GAUSSIAN INITIAL CHECKPOINT FILE
 #CHK=test0276.chk
 
-## GAUSSIAN OUTPUT
+## GAUSSIAN OUTPUT_DIR
 GLOG="${GNAME}.log"
 ## GAUSSIAN FINAL CHECKPOINT FILE
 CHKF="${GNAME}.chk"
@@ -79,9 +81,14 @@ FCHKF="${GNAME}.fchk"
 ## GAUSSIAN READ-WRITE FILE
 RWF="${GNAME}.rwf"
 ## GAUSSIAN SCRATCH DIRECTORY
-SCRATCH_DIR="${HOME}/SCRATCH"
+#SCRATCH_DIR="${HOME}/SCRATCH" # Only for bigger than 2 TB scratch files if available. Slower Shared NFS Drive.  WARNING: IT MAY AFFECT OTHER USERS. USE IT WITH CARE AND PERMISSON !!!
+SCRATCH_DIR="${TMPDIR}/SCRATCH" # Default location. Faster SSD Hard Drive. Highly recommended.
 echo "... VARIABLES LOADED."
 
+## SGE HISTORY 
+SGE_HISTORY_JSON="${HOME}/.sge_history.json"
+STARTING_TIME="$(date +"%Y-%m-%d %H:%M:%S")"
+JOB_TYPE="GAUSSIAN"
 
 ## Cargar los módulos necesarios (OPCIONAL)
 ## module unload MODULO_NO_DESEADO 
@@ -94,11 +101,11 @@ echo "... GAUSSIAN MODULE LOADED."
 
 
 ## Volcar toda la información a un directorio temporal
-SCRATCH_WORKDIR="${SCRATCH_DIR}/${JOBNAME}_${JOB_ID}"
+SCRATCH_WORKDIR="${SCRATCH_DIR}/${JOB_NAME}_${JOB_ID}"
 echo 
 echo "03.- CREATING SCRATCH DIRECTORY: ${SCRATCH_WORKDIR}"
 echo "..."
-[ ! -f ${SCRATCH_WORKDIR} ] && mkdir ${SCRATCH_WORKDIR}
+[ ! -d ${SCRATCH_WORKDIR} ] && mkdir -p ${SCRATCH_WORKDIR}
 cp -r ${SGE_O_WORKDIR}/${GJF} ${SCRATCH_WORKDIR}
 cd ${SCRATCH_WORKDIR}
 echo "... SCRATCH DIRECTORY CREATED."
@@ -115,26 +122,48 @@ echo "... GAUSSIAN LAUNCHED."
 
 ## Volcar toda la información al /home de usuario
 echo 
-echo "05.- SAVING GAUSSIAN OUTPUT FILES IN ${SGE_O_WORKDIR}/${JOBNAME}"
+echo "05.- SAVING GAUSSIAN OUTPUT FILES IN ${SGE_O_WORKDIR}/${JOB_NAME}"
 echo "..."
-OUTDIR="${SGE_O_WORKDIR}/${JOBNAME}/${JOBNAME}_${JOB_ID}"
-[ ! -d ${SGE_O_WORKDIR}/${JOBNAME} ] && mkdir ${SGE_O_WORKDIR}/${JOBNAME}
-mv ${SCRATCH_WORKDIR} ${OUTDIR}
-echo "... GAUSSIAN OUTPUT FILES SAVED IN ${OUTDIR}"
+[ ! -d ${SGE_O_WORKDIR}/${JOB_NAME} ] && mkdir -p ${SGE_O_WORKDIR}/${JOB_NAME}
+mv ${SCRATCH_WORKDIR} ${OUTPUT_DIR}
+echo "... GAUSSIAN OUTPUT FILES SAVED IN ${OUTPUT_DIR}"
 
 ##/share/software-build/gaussian16/g16/formchk $CHK.chk $CHK.fchk
 
 echo 
-echo "06.- SAVING SGE OUTPUT FILES IN ${OUTDIR}"
+echo "06.- SAVING SGE OUTPUT FILES IN ${OUTPUT_DIR}"
 echo "..."
-[ -f ${SGE_O_WORKDIR}/${LOG} ] && mv ${SGE_O_WORKDIR}/${LOG} ${OUTDIR}/
-[ -f ${SGE_O_WORKDIR}/${ELOG} ] && mv ${SGE_O_WORKDIR}/${ELOG} ${OUTDIR}/
-echo "... SGE OUTPUT FILES SAVED IN ${OUTDIR}"
+[ -f ${SGE_O_WORKDIR}/${LOG} ] && mv ${SGE_O_WORKDIR}/${LOG} ${OUTPUT_DIR}/
+[ -f ${SGE_O_WORKDIR}/${ELOG} ] && mv ${SGE_O_WORKDIR}/${ELOG} ${OUTPUT_DIR}/
+echo "... SGE OUTPUT FILES SAVED IN ${OUTPUT_DIR}"
 
 echo 
-echo "06.- SAVING SGE INPUT FILES IN ${OUTDIR}"
+echo "06.- SAVING SGE INPUT FILES IN ${OUTPUT_DIR}"
 echo "..."
-cp ${SGE_O_WORKDIR}/${JOBNAME}.job ${OUTDIR}
-echo "... SGE INPUT FILES SAVED IN ${OUTDIR}"
+cp ${SGE_O_WORKDIR}/${JOB_NAME}.job ${OUTPUT_DIR}
+echo "... SGE INPUT FILES SAVED IN ${OUTPUT_DIR}"
 echo 
 echo "SGE JOB SUCCESSFULLY FINISHED!"
+
+ENDING_TIME="$(date +"%Y-%m-%d %H:%M:%S")"
+
+JOB_RECORD="{
+\"JobID\": \"${JOB_ID}\",
+\"StartingTimestamp\": \"${STARTING_TIME}\",
+\"UserName\": \"${SGE_O_LOGNAME}\",
+\"JobType\": \"${JOB_TYPE}\",
+\"JobName\": \"${JOB_NAME}\",
+\"InputDir\": \"${SGE_O_WORKDIR}\",
+\"OutputDir\": \"${OUTPUT_DIR}\",
+\"GaussianJobFile\": \"${GJF}\",
+\"GaussianLogFile\": \"${GLOG}\",
+\"SGELogFile\": \"${LOG}\",
+\"EndingTimestamp\": \"${ENDING_TIME}\",
+\"Node\": \"${HOSTNAME}\",
+\"Queue\": \"${QUEUE}\",
+\"NumProcessors\": \"${NSLOTS}\",
+\"FrontEnd\": \"${SGE_O_HOST}\"
+}"
+
+[ ! -f ${SGE_HISTORY_JSON} ] && touch ${SGE_HISTORY_JSON}
+echo "${JOB_RECORD}" >> ${SGE_HISTORY_JSON}
