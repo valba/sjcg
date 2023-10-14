@@ -112,9 +112,9 @@ echo "... SCRATCH DIRECTORY CREATED."
 
 echo 
 echo "04.- LAUNCHING GAUSSIAN: "
-echo "/share/bin/gaussian16 -y=${CHKF} -z=${RWF} -fchk=${FCHKF} < ${GJF} > >(tee ${GLOG} > /dev/null) > >(tee ${SGE_O_WORKDIR}/${GLOG} > /dev/null)"
+echo "/share/bin/gaussian16 -y=${CHKF} -z=${RWF} -fchk=${FCHKF} < ${GJF} > >(tee ${SGE_O_WORKDIR}/${GLOG} ${GLOG} > /dev/null)"
 echo "..."
-/share/bin/gaussian16 -y=${CHKF} -z=${RWF} -fchk=${FCHKF} < ${GJF} > >(tee ${GLOG} > /dev/null) > >(tee ${SGE_O_WORKDIR}/${GLOG} > /dev/null)
+/share/bin/gaussian16 -y=${CHKF} -z=${RWF} -fchk=${FCHKF} < ${GJF} > >(tee ${SGE_O_WORKDIR}/${GLOG} ${GLOG} > /dev/null)
 echo "... GAUSSIAN LAUNCHED."
 
 
