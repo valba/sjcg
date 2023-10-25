@@ -1,52 +1,52 @@
 #!/bin/bash
 
 ###############################
-#  Configuracion del trabajo  #
+#    SGE JOB Configuration    #
 ###############################
-## Utilizar la shell de bash (RECOMENDABLE)
+## Use the Bash shell (RECOMMENDED)
 #$ -S /bin/bash
 
-## Importar las variables de entorno del sistema (como $PWD, $USERNAME, $PATH, etc.) 
-## (MUY RECOMENDABLE)
+## Import enviroment variables (like $PWD, $USERNAME, $PATH, etc.) 
+## (HIGHLY RECOMMENDED)
 #$ -V
 
-# Ejecutar el trabajo en el directorio actual (RECOMENDABLE)
+# Launch the job from the working directory (RECOMMENDED)
 #$ -cwd
 
-## Ejecutar en una cola determinada (RECOMENDABLE)
+## Submit the job to a specific queue (RECOMMENDED)
 #$ -q epsilon@compute-2-0
 
-## Limite del tiempo de ejecuccion
+## Runtime limit
 ##$ -l h_rt=20000:00:00
-## Reserva de Shared RAM
+## Shared RAM reservation
 #$ -l h_vmem=10000M
 
-## Activar paralelización (OBLIGATORIO PARA TRABAJOS EN PARALELO)
+## PARALLELIZATION ACTIVATION (MANDATORY FOR PARALLEL JOBS)
 ## PEV   = make, mpi, smp
-## NPROC = número de procesadores
+## NPROC = Number of processors
 #$ -pe mpi !__SGE-NUM-PROCESSORS__!
 
-## Nombre del trabajo (OPCIONAL)
+## SGE Job Name (OPTIONAL)
 #$ -N !__SGE-JOB_NAME__!
 
-## Log de salida (OPCIONAL)
+## SGE Output Log (OPTIONAL)
 #$ -o !__SGE-JOB_NAME__!.log
 
-## Log de error (OPCIONAL)
+## SGE Error Log (OPTIONAL)
 #$ -e error_!__SGE-JOB_NAME__!.log
 
-## Fusionar salida y error en el mismo archivo (OPCIONAL)                                      
+## Merge SGE Output and Error Logs into a single file (OPTIONAL)                                      
 #$ -j n
 
-## Asignar espacio requerido para el trabajo indicado en GB y entre " " (>=100 -> partition1, <100 -> partition2)
-## Solo disponible en las colas ALPHA, BETA y DSETA ya que son las unicas con 2 discos de scratch
-## En las demas colas siempre ira a partition1 sea cual sea el valor de DiskSpace 
+## Reserve required disk space in GB and choose between " " (>=100 -> partition1, <100 -> partition2)
+## This option is only available for the following queues: ALPHA, BETA, and DELTA, which are the only ones with 2 scratch disks.
+## For other queues, disk space will always be reserved in partition1, regardless of the value of DiskSpace. 
 DiskSpace="50"
 
 #########################
-#  Comandos a ejecutar  #
+#    Commands to Run    #
 #########################
-## NO MODIFICAR ESTA LINEA (permite asignar que disco de scratch usar)
+## DO NOT MODIFY THE FOLLOWING LINE (it assigns which scratch disk to use)
 source /usr/local/jobs/scratch.sh $DiskSpace
 
 
@@ -69,7 +69,7 @@ GNAME=!__GAUSSIAN-JOB_NAME__!
 ## GAUSSIAN JOB FILE
 GJF="${GNAME}.gjf"
 ## GAUSSIAN INITIAL CHECKPOINT FILE
-#CHK=test0276.chk
+OLDCHK="${GNAME}_old.chk"
 
 ## GAUSSIAN OUTPUT_DIR
 GLOG="${GNAME}.log"
@@ -105,7 +105,14 @@ echo "03.- CREATING SCRATCH DIRECTORY: ${SCRATCH_WORKDIR}"
 echo "..."
 SCRATCH_WORKDIR="${SCRATCH_DIR}/${JOB_NAME}_${JOB_ID}"
 [ ! -d ${SCRATCH_WORKDIR} ] && mkdir -p ${SCRATCH_WORKDIR}
-cp -r ${SGE_O_WORKDIR}/${GJF} ${SCRATCH_WORKDIR}
+cp ${SGE_O_WORKDIR}/${GJF} ${SCRATCH_WORKDIR}
+if [ -v OLDCHK ] ; then
+    echo "Copying ${OLDCHK} to SCRATCH"
+    cp ${SGE_O_WORKDIR}/${OLDCHK} ${SCRATCH_WORKDIR}
+else
+    echo "No initial Checkpoint file declared."
+fi
+
 cd ${SCRATCH_WORKDIR}
 echo "... SCRATCH DIRECTORY CREATED."
 
@@ -148,7 +155,9 @@ if grep -q 'Normal termination' ${OUTPUT_DIR}/${GLOG}; then
     echo "Gaussian Normal termination"
     GSTATUS="Normal Termination"
 else
-    [-f ${OUTPUT_DIR}/${GLOG}] && mv ${OUTPUT_DIR}/${GLOG} ${OUTPUT_DIR}/"error_${GLOG}" && echo "Gaussian Error" && GSTATUS="Error found"
+    echo "Gaussian Error"
+    GSTATUS="Error found"
+    [ -f ${OUTPUT_DIR}/${GLOG} ] && mv ${OUTPUT_DIR}/${GLOG} ${OUTPUT_DIR}/"error_${GLOG}"
     echo "No Gaussian log file found"
 fi
 echo "... GAUSSIAN LOG ANALYZED."
