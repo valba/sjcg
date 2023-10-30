@@ -18,13 +18,14 @@
 
 # Function to display usage instructions
 usage() {
-    echo "Usage: $0 [OPTIONS] <GAUSSIAN_JOB_NAME> <SGE_JOB_NAME>"
+    echo "Usage: $0 [OPTIONS] <GAUSSIAN_JOB_NAME> <SGE_JOB_NAME> <SGE_NUM_PROCESSORS>"
     echo "OPTIONS:"
     echo "  -h, --help    Display this help message"
     echo
     echo "Arguments:"
     echo "  GAUSSIAN_JOB_NAME   Name of the Gaussian job file (.gjf) to use"
     echo "  SGE_JOB_NAME        Name of the SGE job file (.job) to generate"
+    echo "  SGE_NUM_PROCESSORS  Number of processors (NSLOTS) to reserve"
     echo
     echo "Example usage: sjcg H2CO_B3P86_6-31G-df-p.gjf H2CO_B3P86.job"
     exit 1
