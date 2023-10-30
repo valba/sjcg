@@ -57,3 +57,4 @@ TEMPLATE_FILE="${HOME}/.local/templates/gaussian_job.tmpl"
 OUTPUT_FILE="${SGE_JOB_NAME}.job"
 sed -e "s/!__SGE-JOB_NAME__!/${SGE_JOB_NAME}/g" -e "s/!__GAUSSIAN-JOB_NAME__!/${GAUSSIAN_JOB_NAME}/g" -e "s/!__SGE-NUM-PROCESSORS__!/${SGE_NUM_PROCESSORS}/g" "${TEMPLATE_FILE}" > "${OUTPUT_FILE}"
 
+# end of script
