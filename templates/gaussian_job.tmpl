@@ -187,3 +187,6 @@ JOB_RECORD="{
 
 [ ! -f ${SGE_HISTORY_JSON} ] && touch ${SGE_HISTORY_JSON}
 echo "${JOB_RECORD}" >> ${SGE_HISTORY_JSON}
+echo "${JOB_RECORD}" > ${OUTPUT_DIR}/job_record.json
+
+# end of script
