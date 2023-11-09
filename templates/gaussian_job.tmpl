@@ -77,6 +77,8 @@ GLOG="${GNAME}.log"
 CHKF="${GNAME}.chk"
 ## GAUSSIAN FINAL FORMATED CHECKPOINT FILE
 FCHKF="${GNAME}.fchk"
+## GAUSSIAN FINAL OLD-FORMATED CHECKPOINT FILE
+FCHKF03="${GNAME}.03_fchk"
 ## GAUSSIAN READ-WRITE FILE
 RWF="${GNAME}.rwf"
 ## GAUSSIAN SCRATCH DIRECTORY
@@ -128,11 +130,12 @@ echo "... GAUSSIAN LAUNCHED."
 echo 
 echo "05.- SAVING GAUSSIAN OUTPUT FILES IN ${SGE_O_WORKDIR}/${JOB_NAME}"
 echo "..."
+echo "Creating Gaussian03 FCHK as ${FCHKF03}"
+/share/software-build/gaussian16/g16/formchk -2 ${OLDCHK} ${FCHKF03}
+echo "Gaussian03 FCHK created"
 [ ! -d ${SGE_O_WORKDIR}/${JOB_NAME} ] && mkdir -p ${SGE_O_WORKDIR}/${JOB_NAME}
 mv ${SCRATCH_WORKDIR} ${OUTPUT_DIR}
 echo "... GAUSSIAN OUTPUT FILES SAVED IN ${OUTPUT_DIR}"
-
-##/share/software-build/gaussian16/g16/formchk $CHK.chk $CHK.fchk
 
 echo 
 echo "06.- SAVING SGE OUTPUT FILES IN ${OUTPUT_DIR}"
