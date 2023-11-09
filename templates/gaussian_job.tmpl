@@ -166,6 +166,15 @@ echo "SGE JOB SUCCESSFULLY FINISHED!"
 
 ENDING_TIME="$(date +"%Y-%m-%d %H:%M:%S")"
 
+# Check if the SGE_HISTORY_JSON file exists
+if [ ! -f "${SGE_HISTORY_JSON}" ]; then
+  # If the file doesn't exist, create it and start with an opening bracket
+  echo "[" > "${SGE_HISTORY_JSON}"
+else
+  # If the file exists, insert a comma to separate job records
+  sed -i '$s/]/,/' "${SGE_HISTORY_JSON}"
+fi
+
 JOB_RECORD="{
 \"JobID\": \"${JOB_ID}\",
 \"StartingTimestamp\": \"${STARTING_TIME}\",
@@ -185,8 +194,9 @@ JOB_RECORD="{
 \"FrontEnd\": \"${SGE_O_HOST}\"
 }"
 
-[ ! -f ${SGE_HISTORY_JSON} ] && touch ${SGE_HISTORY_JSON}
-echo "${JOB_RECORD}" >> ${SGE_HISTORY_JSON}
+# Append the job record and the closing bracket to the SGE_HISTORY_JSON file
+echo "${JOB_RECORD}" >> "${SGE_HISTORY_JSON}"
+echo "]" >> "${SGE_HISTORY_JSON}"
 echo "${JOB_RECORD}" > ${OUTPUT_DIR}/job_record.json
 
 # end of script
